@@ -1,0 +1,315 @@
+"""WebSocket client for connecting to Swarm platform.
+
+# CLIENT-SPECIFIC: Handles secure connection, message routing, and reconnection
+"""
+
+import asyncio
+import logging
+import json
+import ssl
+from typing import Optional, Callable, Awaitable
+from datetime import datetime
+import websockets
+from websockets.client import WebSocketClientProtocol
+
+from ..protocol import (
+    MessageEnvelope, ConnectMessage, CommandMessage, ResponseMessage,
+    StatusMessage, HeartbeatMessage, PROTOCOL_VERSION
+)
+from ..executor import CommandExecutor
+from ..config.models import ClientConfig
+
+logger = logging.getLogger("cheshire_labs.client_driver.client")
+
+
+class WebSocketClient:
+    """Manages WebSocket connection to Swarm platform with reconnection logic."""
+
+    def __init__(
+        self,
+        config: ClientConfig,
+        executor: CommandExecutor,
+        heartbeat_interval: float = 30.0,
+        reconnect_delay: float = 5.0,
+        max_reconnect_delay: float = 60.0
+    ):
+        """Initialize WebSocket client.
+
+        Args:
+            config: Client configuration
+            executor: Command executor for handling commands
+            heartbeat_interval: Seconds between heartbeats
+            reconnect_delay: Initial delay between reconnection attempts
+            max_reconnect_delay: Maximum delay between reconnection attempts
+        """
+        self.config = config
+        self.executor = executor
+        self.heartbeat_interval = heartbeat_interval
+        self.reconnect_delay = reconnect_delay
+        self.max_reconnect_delay = max_reconnect_delay
+
+        self.ws: Optional[WebSocketClientProtocol] = None
+        self._connected = False
+        self._running = False
+        self._heartbeat_task: Optional[asyncio.Task] = None
+        self._receive_task: Optional[asyncio.Task] = None
+
+        # Status callback for UI/logging
+        self.on_status_change: Optional[Callable[[str], Awaitable[None]]] = None
+
+    @property
+    def is_connected(self) -> bool:
+        """Check if currently connected to platform."""
+        return self._connected and self.ws is not None
+
+    async def start(self) -> None:
+        """Start the WebSocket client with automatic reconnection.
+
+        This will keep trying to connect until explicitly stopped.
+        """
+        self._running = True
+        current_delay = self.reconnect_delay
+
+        while self._running:
+            try:
+                await self._connect_and_run()
+                # Reset delay on successful connection
+                current_delay = self.reconnect_delay
+
+            except asyncio.CancelledError:
+                logger.info("Client cancelled, stopping...")
+                break
+
+            except Exception as e:
+                logger.error(f"Connection error: {e}", exc_info=True)
+                if not self._running:
+                    break
+
+                # Exponential backoff for reconnection
+                logger.info(f"Reconnecting in {current_delay}s...")
+                await asyncio.sleep(current_delay)
+                current_delay = min(current_delay * 2, self.max_reconnect_delay)
+
+    async def stop(self) -> None:
+        """Stop the WebSocket client and cleanup."""
+        logger.info("Stopping WebSocket client...")
+        self._running = False
+
+        # Cancel tasks
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
+            try:
+                await self._heartbeat_task
+            except asyncio.CancelledError:
+                pass
+
+        if self._receive_task:
+            self._receive_task.cancel()
+            try:
+                await self._receive_task
+            except asyncio.CancelledError:
+                pass
+
+        # Close connection
+        if self.ws:
+            await self.ws.close()
+            self.ws = None
+
+        self._connected = False
+        logger.info("WebSocket client stopped")
+
+    async def _connect_and_run(self) -> None:
+        """Connect to platform and run until disconnected."""
+        # Build WebSocket URL with API key
+        url = f"{self.config.platform.url}?api_key={self.config.platform.api_key}"
+
+        # Create SSL context for TLS (WSS)
+        ssl_context = ssl.create_default_context()
+        if not self.config.platform.verify_ssl:
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            logger.warning("SSL verification disabled - use only for testing!")
+
+        logger.info(f"Connecting to Swarm platform: {self.config.platform.url}")
+
+        async with websockets.connect(url, ssl=ssl_context) as ws:
+            self.ws = ws
+            logger.info("Connected to Swarm platform")
+
+            # Send connection message
+            await self._send_connect_message()
+
+            # Wait for connection acknowledgment
+            # (For MVP, we assume immediate connection)
+            self._connected = True
+            await self._notify_status("CONNECTED")
+
+            # Start heartbeat and receive tasks
+            self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+            self._receive_task = asyncio.create_task(self._receive_loop())
+
+            # Wait for either task to complete (indicates disconnection)
+            done, pending = await asyncio.wait(
+                [self._heartbeat_task, self._receive_task],
+                return_when=asyncio.FIRST_COMPLETED
+            )
+
+            # Cancel remaining task
+            for task in pending:
+                task.cancel()
+
+            self._connected = False
+            await self._notify_status("DISCONNECTED")
+
+    async def _send_connect_message(self) -> None:
+        """Send initial connection message to platform."""
+        msg = ConnectMessage(
+            client_id=self.config.client_id,
+            protocol_version=PROTOCOL_VERSION,
+            devices=self.config.devices_metadata()
+        )
+        envelope = MessageEnvelope(type="connect", payload=msg.model_dump())
+        await self._send(envelope)
+        logger.info(f"Sent connection message for client: {self.config.client_id}")
+
+    async def _heartbeat_loop(self) -> None:
+        """Send periodic heartbeats to keep connection alive."""
+        try:
+            while self._connected:
+                await asyncio.sleep(self.heartbeat_interval)
+
+                heartbeat = HeartbeatMessage(timestamp=datetime.utcnow())
+                envelope = MessageEnvelope(type="heartbeat", payload=heartbeat.model_dump())
+                await self._send(envelope)
+                logger.debug("Sent heartbeat")
+
+        except asyncio.CancelledError:
+            logger.debug("Heartbeat loop cancelled")
+            raise
+        except Exception as e:
+            logger.error(f"Heartbeat error: {e}", exc_info=True)
+            raise
+
+    async def _receive_loop(self) -> None:
+        """Receive and process messages from platform."""
+        try:
+            async for message in self.ws:
+                try:
+                    # Parse envelope
+                    data = json.loads(message)
+                    envelope = MessageEnvelope.model_validate(data)
+
+                    # Route based on message type
+                    if envelope.type == "command":
+                        await self._handle_command(envelope)
+                    elif envelope.type == "heartbeat":
+                        logger.debug("Received heartbeat")
+                    else:
+                        logger.warning(f"Unknown message type: {envelope.type}")
+
+                except Exception as e:
+                    logger.error(f"Error processing message: {e}", exc_info=True)
+
+        except asyncio.CancelledError:
+            logger.debug("Receive loop cancelled")
+            raise
+        except websockets.exceptions.ConnectionClosed:
+            logger.info("Connection closed by platform")
+            raise
+        except Exception as e:
+            logger.error(f"Receive error: {e}", exc_info=True)
+            raise
+
+    async def _handle_command(self, envelope: MessageEnvelope) -> None:
+        """Handle command message from platform.
+
+        Args:
+            envelope: Message envelope with command payload
+        """
+        try:
+            # Parse command
+            cmd = CommandMessage.model_validate(envelope.payload)
+            logger.info(f"Received command: {cmd.command} on {cmd.device_id}")
+
+            # Execute command
+            response = await self.executor.execute(cmd)
+
+            # Send response
+            response_envelope = MessageEnvelope(
+                type="response",
+                payload=response.model_dump()
+            )
+            await self._send(response_envelope)
+
+            logger.info(f"Command {cmd.command_id} completed: {response.success}")
+
+        except Exception as e:
+            logger.error(f"Error handling command: {e}", exc_info=True)
+            # Send error response if possible
+            try:
+                cmd_id = envelope.payload.get("command_id", "unknown")
+                error_response = ResponseMessage(
+                    command_id=cmd_id,
+                    success=False,
+                    result=None,
+                    error=str(e),
+                    error_type=type(e).__name__
+                )
+                error_envelope = MessageEnvelope(
+                    type="response",
+                    payload=error_response.model_dump()
+                )
+                await self._send(error_envelope)
+            except Exception as send_error:
+                logger.error(f"Failed to send error response: {send_error}")
+
+    async def _send(self, envelope: MessageEnvelope) -> None:
+        """Send message envelope to platform.
+
+        Args:
+            envelope: Message envelope to send
+        """
+        if not self.ws:
+            raise RuntimeError("Not connected to platform")
+
+        message = json.dumps(envelope.model_dump())
+        await self.ws.send(message)
+
+    async def _notify_status(self, status: str) -> None:
+        """Notify status change callback.
+
+        Args:
+            status: New status (CONNECTED, DISCONNECTED, etc.)
+        """
+        logger.info(f"Status changed: {status}")
+        if self.on_status_change:
+            try:
+                await self.on_status_change(status)
+            except Exception as e:
+                logger.error(f"Error in status callback: {e}", exc_info=True)
+
+    async def send_status(self, device_id: str, status: str, details: Optional[dict] = None) -> None:
+        """Send device status update to platform.
+
+        Args:
+            device_id: Device identifier
+            status: Status string
+            details: Optional additional details
+        """
+        if not self.is_connected:
+            logger.warning(f"Cannot send status - not connected: {device_id} {status}")
+            return
+
+        try:
+            status_msg = StatusMessage(
+                device_id=device_id,
+                status=status,
+                timestamp=datetime.utcnow(),
+                details=details or {}
+            )
+            envelope = MessageEnvelope(type="status", payload=status_msg.model_dump())
+            await self._send(envelope)
+            logger.debug(f"Sent status: {device_id} {status}")
+
+        except Exception as e:
+            logger.error(f"Error sending status: {e}", exc_info=True)
