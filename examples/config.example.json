@@ -1,5 +1,8 @@
 {
   "client_id": "lab-workstation-1",
+  "site": "boston",
+  "lab": "molbio",
+  "workcell": null,
   "platform": {
     "url": "wss://swarm.cheshirelabs.io/ws",
     "api_key": "${SWARM_API_KEY}",

@@ -20,10 +20,13 @@ class ConnectMessage(BaseModel):
     """Sent by client when connecting to platform.
 
     The client authenticates using an API key and provides a list of
-    devices it can control.
+    devices it can control, along with organizational hierarchy metadata.
     """
     protocol_version: str = PROTOCOL_VERSION
     api_key: str = Field(..., description="API key for authentication")
+    site: str = Field(..., description="Geographic site location (e.g., 'boston', 'cambridge')")
+    lab: str = Field(..., description="Lab or workcell name within site (e.g., 'molbio', 'cellculture')")
+    workcell: Optional[str] = Field(None, description="Optional workcell identifier for standalone device setups")
     devices: List[Dict[str, str]] = Field(
         ...,
         description="List of available devices with device_id, type, and name"
@@ -34,6 +37,9 @@ class ConnectMessage(BaseModel):
             "example": {
                 "protocol_version": "1.0.0",
                 "api_key": "sk_test_1234567890",
+                "site": "boston",
+                "lab": "molbio",
+                "workcell": None,
                 "devices": [
                     {"device_id": "shaker_1", "type": "shaker", "name": "Lab Shaker"},
                     {"device_id": "centrifuge_1", "type": "centrifuge", "name": "Eppendorf Centrifuge"}

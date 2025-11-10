@@ -164,13 +164,16 @@ class WebSocketClient:
     async def _send_connect_message(self) -> None:
         """Send initial connection message to platform."""
         msg = ConnectMessage(
-            client_id=self.config.client_id,
             protocol_version=PROTOCOL_VERSION,
+            api_key=self.config.platform.api_key,
+            site=self.config.site,
+            lab=self.config.lab,
+            workcell=self.config.workcell,
             devices=self.config.devices_metadata()
         )
         envelope = MessageEnvelope(type="connect", payload=msg.model_dump())
         await self._send(envelope)
-        logger.info(f"Sent connection message for client: {self.config.client_id}")
+        logger.info(f"Sent connection message for client: {self.config.client_id} (site={self.config.site}, lab={self.config.lab})")
 
     async def _heartbeat_loop(self) -> None:
         """Send periodic heartbeats to keep connection alive."""
