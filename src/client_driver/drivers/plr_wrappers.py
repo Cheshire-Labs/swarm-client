@@ -54,6 +54,14 @@ class PLRTransporterBackendWrapper(ITransporterDriver):
         # await self._backend.move_to_safe()
         self._is_initialized = True
 
+    async def open(self) -> None:
+        """Open transporter door or gripper."""
+        pass  # Most transporters don't have open/close
+
+    async def close(self) -> None:
+        """Close transporter door or gripper."""
+        pass  # Most transporters don't have open/close
+
     async def pick(self, position_name: str, labware_type: str) -> None:
         tp = self._teachpoints.get(position_name)
         if tp is None:

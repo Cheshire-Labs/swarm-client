@@ -245,6 +245,16 @@ class SimTransporterDriver(ITransporterDriver):
     async def initialize(self) -> None:
         self._is_initialized = True
 
+    async def open(self) -> None:
+        """Open the transporter door."""
+        await self._sim(f"Opening {self.name}...")
+        logger.info(f"{self.name} opened successfully.")
+
+    async def close(self) -> None:
+        """Close the transporter door."""
+        await self._sim(f"Closing {self.name}...")
+        logger.info(f"{self.name} closed successfully.")
+
     async def pick(self, position_name: str, labware_type: str) -> None:
         """Pick labware from a position."""
         await self._sim(f"Driver: {self.name} picking from {position_name}, labware type: {labware_type}...")

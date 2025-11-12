@@ -137,23 +137,12 @@ class IDelidderDriver(BaseDriver, ABC):
         ...
 
 
-class ITransporterDriver(ABC):
+class ITransporterDriver(BaseDriver, ABC):
 
     @property
     @abstractmethod
     def name(self) -> str:
         """Returns the name of the transporter."""
-        ...
-
-    @abstractmethod
-    async def initialize(self) -> None:
-        """Setup the driver."""
-        ...
-
-    @property
-    @abstractmethod
-    def is_initialized(self) -> bool:
-        """Returns whether the driver is initialized or not."""
         ...
 
     @abstractmethod
