@@ -6,17 +6,16 @@
 import logging
 from typing import Any
 from ..config.models import DeviceConfig
-from ..drivers.interfaces import BaseDriver
-from ..drivers.sims import (
+from cheshire_drivers import (
+    BaseDriver,
     SimShakerDriver, SimCentrifugeDriver, SimSealerDriver,
     SimTransporterDriver, SimLiquidHandlerDriver,
-    SimPlateWasherDriver, SimReaderDriver, SimDelidderDriver
-)
-from ..drivers.plr_wrappers import (
+    SimPlateWasherDriver, SimReaderDriver, SimDelidderDriver,
     PLRShakerBackendWrapper,
     PLRCentrifugeBackendWrapper,
     PLRSealerBackendWrapper,
     PLRTransporterBackendWrapper,
+    Teachpoint,
 )
 
 logger = logging.getLogger("cheshire_labs.client_driver.factory")
@@ -84,7 +83,6 @@ class DeviceFactory:
             wrapper = PLRTransporterBackendWrapper(backend)
             # Load teachpoints if specified
             if config.driver.teachpoints_file:
-                from ..drivers.teachpoints import Teachpoint
                 teachpoints = Teachpoint.load_teachpoints_from_file(config.driver.teachpoints_file)
                 wrapper.load_teachpoints(teachpoints)
             return wrapper

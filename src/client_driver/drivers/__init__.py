@@ -1,13 +1,11 @@
 """Device drivers for lab automation equipment.
 
-This package provides:
-- Abstract driver interfaces (interfaces.py)
-- PyLabRobot backend wrappers (plr_wrappers.py)
-- Simulation drivers for testing (sims.py)
-- Teachpoint definitions for transporters (teachpoints.py)
+This package re-exports from cheshire_drivers, the shared driver package.
 """
 
-from .interfaces import (
+# Re-export everything from cheshire_drivers
+from cheshire_drivers import (
+    # Interfaces
     BaseDriver,
     IShakerDriver,
     ISealerDriver,
@@ -22,16 +20,13 @@ from .interfaces import (
     IWasteDriver,
     ITempSettableDriver,
     ITempGettableDriver,
-)
-
-from .plr_wrappers import (
+    # PLR Wrappers
     PLRShakerBackendWrapper,
     PLRSealerBackendWrapper,
     PLRCentrifugeBackendWrapper,
     PLRTransporterBackendWrapper,
-)
-
-from .sims import (
+    convert_teachpoint_to_plr_coord,
+    # Simulation Drivers
     SimShakerDriver,
     SimSealerDriver,
     SimCentrifugeDriver,
@@ -43,12 +38,19 @@ from .sims import (
     SimStorageDriver,
     SimWasteDriver,
     SimDriver,
-)
-
-from .teachpoints import (
+    SimStrategy,
+    SleepSim,
+    HumanSim,
+    BaseSimDriver,
+    # Teachpoints
     Teachpoint,
     CartesianCoordinates,
     TeachpointsRegistry,
+    AccessConfig,
+    # Specialized Drivers
+    VenusProtocolDriver,
+    SimulationVenusProtocolDriver,
+    NullPlatePadDriver,
 )
 
 __all__ = [
@@ -72,6 +74,7 @@ __all__ = [
     "PLRSealerBackendWrapper",
     "PLRCentrifugeBackendWrapper",
     "PLRTransporterBackendWrapper",
+    "convert_teachpoint_to_plr_coord",
     # Simulation Drivers
     "SimShakerDriver",
     "SimSealerDriver",
@@ -84,8 +87,17 @@ __all__ = [
     "SimStorageDriver",
     "SimWasteDriver",
     "SimDriver",
+    "SimStrategy",
+    "SleepSim",
+    "HumanSim",
+    "BaseSimDriver",
     # Teachpoints
     "Teachpoint",
     "CartesianCoordinates",
     "TeachpointsRegistry",
+    "AccessConfig",
+    # Specialized Drivers
+    "VenusProtocolDriver",
+    "SimulationVenusProtocolDriver",
+    "NullPlatePadDriver",
 ]
