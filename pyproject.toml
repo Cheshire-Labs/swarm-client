@@ -22,7 +22,7 @@ dependencies = [
     "websockets>=12.0",
     "pydantic>=2.0",
     "python-dotenv>=1.0.0",
-    "pylabrobot @ git+https://github.com/Cheshire-Labs/pylabrobot.git"
+    "cheshire-drivers",
 ]
 
 [project.optional-dependencies]

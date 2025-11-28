@@ -6,7 +6,7 @@
 import asyncio
 import logging
 from typing import Dict, Optional, List
-from ..drivers.interfaces import BaseDriver
+from cheshire_drivers import BaseDriver
 
 logger = logging.getLogger("cheshire_labs.client_driver.registry")
 
