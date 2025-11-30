@@ -6,7 +6,6 @@
   "platform": {
     "url": "wss://swarm-backend.onrender.com/ws/devices",
     "api_key": "${SWARM_API_KEY}",
-    "verify_ssl": true,
     "heartbeat_interval": 30.0,
     "command_timeout": 60.0,
     "reconnect_backoff": [1, 2, 4, 8, 16, 30]

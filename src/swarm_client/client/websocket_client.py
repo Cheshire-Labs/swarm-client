@@ -6,10 +6,9 @@
 import asyncio
 import logging
 import json
-import ssl
 import time
 from typing import Optional, Callable, Awaitable, Dict
-from datetime import datetime
+from urllib.parse import urlparse
 import websockets
 from websockets.client import WebSocketClientProtocol
 
@@ -124,13 +123,18 @@ class WebSocketClient:
         """Connect to platform and run until disconnected."""
         # Build WebSocket URL with API key
         url = f"{self.config.platform.url}?api_key={self.config.platform.api_key}"
+        parsed = urlparse(self.config.platform.url)
 
-        # Create SSL context for TLS (WSS)
-        ssl_context = ssl.create_default_context()
-        if not self.config.platform.verify_ssl:
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            logger.warning("SSL verification disabled - use only for testing!")
+        # Security: ws:// only allowed for localhost
+        if parsed.scheme == "ws":
+            if parsed.hostname not in ("localhost", "127.0.0.1", "::1"):
+                raise ValueError(
+                    f"Insecure WebSocket (ws://) not allowed for remote hosts. "
+                    f"Use wss:// for {parsed.hostname}"
+                )
+            ssl_context = None
+        else:
+            ssl_context = True
 
         logger.info(f"Connecting to Swarm platform: {self.config.platform.url}")
 
