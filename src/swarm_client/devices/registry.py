@@ -8,7 +8,7 @@ import logging
 from typing import Dict, Optional, List
 from cheshire_drivers import BaseDriver
 
-logger = logging.getLogger("cheshire_labs.client_driver.registry")
+logger = logging.getLogger("swarm_client.registry")
 
 
 class DeviceRegistry:

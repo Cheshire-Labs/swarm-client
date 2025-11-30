@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime
-from client_driver.protocol import (
+from swarm_client.protocol import (
     CommandMessage, ResponseMessage, MessageEnvelope,
     ConnectMessage, StatusMessage, HeartbeatMessage
 )

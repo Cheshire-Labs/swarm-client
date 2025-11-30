@@ -8,7 +8,7 @@ import logging
 from ..protocol import CommandMessage, ResponseMessage
 from ..devices import DeviceRegistry
 
-logger = logging.getLogger("cheshire_labs.client_driver.executor")
+logger = logging.getLogger("swarm_client.executor")
 
 
 class CommandExecutor:

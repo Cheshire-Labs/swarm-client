@@ -18,7 +18,7 @@ from cheshire_drivers import (
     Teachpoint,
 )
 
-logger = logging.getLogger("cheshire_labs.client_driver.factory")
+logger = logging.getLogger("swarm_client.factory")
 
 
 class DeviceFactory:

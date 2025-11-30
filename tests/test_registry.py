@@ -1,8 +1,8 @@
 """Tests for device registry."""
 
 import pytest
-from client_driver.devices import DeviceRegistry, DeviceFactory
-from client_driver.config.models import DeviceConfig, DriverConfig
+from swarm_client.devices import DeviceRegistry, DeviceFactory
+from swarm_client.config.models import DeviceConfig, DriverConfig
 
 
 @pytest.mark.asyncio

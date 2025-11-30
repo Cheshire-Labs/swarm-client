@@ -1,11 +1,11 @@
-"""Pytest configuration and fixtures for client-driver tests."""
+"""Pytest configuration and fixtures for swarm-client tests."""
 
 import pytest
 import asyncio
 from typing import Dict, Any
 
-from client_driver.devices import DeviceRegistry, DeviceFactory
-from client_driver.config.models import (
+from swarm_client.devices import DeviceRegistry, DeviceFactory
+from swarm_client.config.models import (
     DeviceConfig, DriverConfig, ConnectionConfig,
     PlatformConfig, ClientConfig
 )

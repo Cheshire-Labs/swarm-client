@@ -1,4 +1,4 @@
-"""Logging configuration for client-driver.
+"""Logging configuration for swarm-client.
 
 Sets up file and console logging with platform-specific log directories.
 """
@@ -14,18 +14,18 @@ def get_log_directory() -> Path:
     """Get platform-specific log directory.
 
     Returns:
-        Windows: %LOCALAPPDATA%\\cheshire-labs\\client-driver\\logs
-        macOS: ~/Library/Logs/cheshire-client-driver
-        Linux: ~/.local/share/cheshire-client-driver/logs
+        Windows: %LOCALAPPDATA%\\cheshire-labs\\swarm-client\\logs
+        macOS: ~/Library/Logs/swarm-client
+        Linux: ~/.local/share/swarm-client/logs
     """
     if sys.platform == "win32":
         base = Path(os.environ.get("LOCALAPPDATA", "C:\\ProgramData"))
-        log_dir = base / "cheshire-labs" / "client-driver" / "logs"
+        log_dir = base / "cheshire-labs" / "swarm-client" / "logs"
     elif sys.platform == "darwin":
-        log_dir = Path.home() / "Library" / "Logs" / "cheshire-client-driver"
+        log_dir = Path.home() / "Library" / "Logs" / "swarm-client"
     else:
         base = Path.home() / ".local" / "share"
-        log_dir = base / "cheshire-client-driver" / "logs"
+        log_dir = base / "swarm-client" / "logs"
 
     log_dir.mkdir(parents=True, exist_ok=True)
     return log_dir
@@ -43,8 +43,8 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     log_dir = get_log_directory()
     log_file = log_dir / "client.log"
 
-    # Root logger for client-driver
-    logger = logging.getLogger("cheshire_labs.client_driver")
+    # Root logger for swarm-client
+    logger = logging.getLogger("swarm_client")
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
 
     # Clear any existing handlers

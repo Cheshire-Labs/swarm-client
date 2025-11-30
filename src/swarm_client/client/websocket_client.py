@@ -20,7 +20,7 @@ from ..protocol import (
 from ..executor import CommandExecutor
 from ..config.models import ClientConfig
 
-logger = logging.getLogger("cheshire_labs.client_driver.client")
+logger = logging.getLogger("swarm_client.client")
 
 
 class WebSocketClient:

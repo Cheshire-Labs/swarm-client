@@ -1,9 +1,9 @@
 """Tests for command executor."""
 
 import pytest
-from client_driver.executor import CommandExecutor
-from client_driver.protocol import CommandMessage
-from client_driver.devices import DeviceRegistry
+from swarm_client.executor import CommandExecutor
+from swarm_client.protocol import CommandMessage
+from swarm_client.devices import DeviceRegistry
 
 
 @pytest.mark.asyncio

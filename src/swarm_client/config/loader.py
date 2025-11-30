@@ -1,4 +1,4 @@
-"""Configuration loader for client-driver.
+"""Configuration loader for swarm-client.
 
 Loads configuration from .env file (secrets) and config.json (devices).
 """
@@ -17,16 +17,16 @@ def get_config_directory() -> Path:
     """Get platform-specific configuration directory.
 
     Returns:
-        Windows: %USERPROFILE%\\.cheshire-client-driver
-        macOS: ~/.cheshire-client-driver
-        Linux: ~/.cheshire-client-driver
+        Windows: %USERPROFILE%\\.swarm-client
+        macOS: ~/.swarm-client
+        Linux: ~/.swarm-client
     """
     if sys.platform == "win32":
         base = Path(os.environ.get("USERPROFILE", "C:\\Users\\Default"))
     else:
         base = Path.home()
 
-    config_dir = base / ".cheshire-client-driver"
+    config_dir = base / ".swarm-client"
     config_dir.mkdir(parents=True, exist_ok=True)
     return config_dir
 

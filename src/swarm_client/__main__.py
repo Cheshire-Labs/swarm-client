@@ -1,4 +1,4 @@
-"""Main entry point for the client driver CLI."""
+"""Main entry point for the Swarm Client CLI."""
 
 import asyncio
 import argparse
@@ -11,7 +11,7 @@ from .devices import DeviceFactory, DeviceRegistry
 from .executor import CommandExecutor
 from .client import WebSocketClient
 
-logger = logging.getLogger("cheshire_labs.client_driver")
+logger = logging.getLogger("swarm_client")
 
 
 async def async_main(args: argparse.Namespace) -> int:
@@ -85,23 +85,23 @@ def main() -> int:
         Exit code (0 for success, non-zero for error)
     """
     parser = argparse.ArgumentParser(
-        description="Cheshire Client Driver - Connect lab devices to Swarm platform",
+        description="Swarm Client - Connect lab devices to Swarm platform",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Run with default config
-  python -m client_driver
+  python -m swarm_client
 
   # Run with verbose logging
-  python -m client_driver --verbose
+  python -m swarm_client --verbose
 
   # Run with custom config directory
-  python -m client_driver --config-dir /path/to/config
+  python -m swarm_client --config-dir /path/to/config
 
 Configuration:
-  The client driver loads configuration from:
+  The client loads configuration from:
     1. Environment variables (SWARM_URL, SWARM_API_KEY, CLIENT_ID)
-    2. JSON config file in ~/.cheshire-client-driver/config.json
+    2. JSON config file in ~/.swarm-client/config.json
 
   See README.md for configuration details.
         """
@@ -114,7 +114,7 @@ Configuration:
     parser.add_argument(
         "--config-dir",
         type=Path,
-        help="Custom configuration directory (default: ~/.cheshire-client-driver)"
+        help="Custom configuration directory (default: ~/.swarm-client)"
     )
     parser.add_argument(
         "--version",
@@ -129,7 +129,7 @@ Configuration:
 
     # Log startup banner
     logger.info("=" * 60)
-    logger.info("Cheshire Client Driver v0.1.0")
+    logger.info("Swarm Client v0.1.0")
     logger.info("Connecting lab devices to Swarm platform")
     logger.info("=" * 60)
 

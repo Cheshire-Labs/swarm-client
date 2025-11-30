@@ -3,13 +3,13 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cheshire-client-driver"
+name = "swarm-client"
 version = "0.1.0"
 description = "WebSocket client for connecting local device drivers to Swarm platform"
 authors = [
     { name = "Cheshire Labs", email = "support@cheshirelabs.io" }
 ]
-urls = {Repository = "https://github.com/Cheshire-Labs/client-driver"}
+urls = {Repository = "https://github.com/Cheshire-Labs/swarm-client"}
 readme = "README.md"
 license = {text = "AGPL-3.0-only"}
 classifiers = [
