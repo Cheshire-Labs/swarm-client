@@ -98,11 +98,11 @@ class DeviceRegistry:
             try:
                 logger.info(f"Initializing {device_id}...")
                 await driver.initialize()
-                logger.info(f"✓ {device_id} initialized successfully")
+                logger.info(f"{device_id} initialized successfully")
             except Exception as e:
                 error_msg = f"{device_id}: {e}"
                 errors.append(error_msg)
-                logger.error(f"✗ Failed to initialize {device_id}: {e}", exc_info=True)
+                logger.error(f"Failed to initialize {device_id}: {e}", exc_info=True)
 
         if errors:
             logger.error("Device initialization failed:")
@@ -113,7 +113,7 @@ class DeviceRegistry:
                 + "\n".join(f"  • {e}" for e in errors)
             )
 
-        logger.info(f"✓ All {len(self._drivers)} devices initialized successfully")
+        logger.info(f"All {len(self._drivers)} devices initialized successfully")
 
     async def cleanup_all(self):
         """Cleanup all devices on shutdown."""
@@ -122,7 +122,7 @@ class DeviceRegistry:
             try:
                 if hasattr(driver, 'close'):
                     await driver.close()
-                logger.debug(f"✓ {device_id} cleaned up")
+                logger.debug(f"{device_id} cleaned up")
             except Exception as e:
                 logger.error(f"Error cleaning up {device_id}: {e}")
 

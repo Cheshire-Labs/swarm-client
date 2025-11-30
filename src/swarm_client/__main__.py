@@ -25,8 +25,9 @@ async def async_main(args: argparse.Namespace) -> int:
     """
     try:
         # Load configuration
-        logger.info("Loading configuration...")
-        config = load_config()
+        config_path = args.config.resolve()
+        logger.info(f"Loading configuration from {config_path}...")
+        config = load_config(str(config_path))
         logger.info(f"Loaded configuration for client: {config.client_id}")
         logger.info(f"Registered {len(config.devices)} device(s)")
 
@@ -49,7 +50,7 @@ async def async_main(args: argparse.Namespace) -> int:
         # Initialize all devices (CRITICAL: fail fast if hardware unavailable)
         logger.info("Initializing devices...")
         await registry.initialize_all()
-        logger.info("✓ All devices initialized successfully")
+        logger.info("All devices initialized successfully")
 
         # Create command executor
         executor = CommandExecutor(
@@ -89,32 +90,30 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run with default config
+  # Run with default config (./config.json)
   python -m swarm_client
+
+  # Run with custom config file
+  python -m swarm_client --config /path/to/config.json
 
   # Run with verbose logging
   python -m swarm_client --verbose
 
-  # Run with custom config directory
-  python -m swarm_client --config-dir /path/to/config
-
 Configuration:
-  The client loads configuration from:
-    1. Environment variables (SWARM_URL, SWARM_API_KEY, CLIENT_ID)
-    2. JSON config file in ~/.swarm-client/config.json
-
-  See README.md for configuration details.
+  Create a config.json file with platform and device settings.
+  See README.md and examples/config.example.json for details.
         """
+    )
+    parser.add_argument(
+        "--config", "-c",
+        type=Path,
+        default=Path("config.json"),
+        help="Path to config.json file (default: ./config.json)"
     )
     parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose (DEBUG) logging"
-    )
-    parser.add_argument(
-        "--config-dir",
-        type=Path,
-        help="Custom configuration directory (default: ~/.swarm-client)"
     )
     parser.add_argument(
         "--version",
