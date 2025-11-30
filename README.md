@@ -348,25 +348,28 @@ See the [LICENSE](LICENSE) file for the full license text.
 
 ## Support
 
-- **Documentation**: [https://docs.orca.io/client-driver](https://docs.orca.io/client-driver)
 - **Issue Tracker**: [GitHub Issues](https://github.com/Cheshire-Labs/orca-client-driver/issues)
-- **Email Support**: support@cheshirelabs.io
-- **Community Forum**: [https://community.orca.io](https://community.orca.io)
 
 ## Acknowledgments
 
-Built with:
-- [PyLabRobot](https://github.com/PyLabRobot/pylabrobot) - Laboratory automation framework
-- [Pydantic](https://pydantic.dev) - Data validation
-- [websockets](https://websockets.readthedocs.io) - WebSocket client library
+### PyLabRobot
 
-Part of the **Orca Laboratory Automation Platform**:
-- [Orca Core](https://github.com/Cheshire-Labs/orca-core) - Workflow orchestration engine
-- [Orca Cloud](https://orca.io) - Cloud platform for remote lab automation
-- [Orca Client Driver](https://github.com/Cheshire-Labs/orca-client-driver) - On-premise device connectivity (this project)
+This project uses [PyLabRobot](https://github.com/PyLabRobot/pylabrobot), an open-source, hardware-agnostic interface for liquid-handling robots and accessories. PyLabRobot was developed for the Sculpting Evolution Group at the MIT Media Lab.
 
----
+If you use this software in academic research, please cite PyLabRobot:
 
-**Cheshire Labs** | Revolutionizing Laboratory Automation
+> Wierenga, R.P., Golas, S.M., Ho, W., Coley, C.W., & Esvelt, K.M. (2023). PyLabRobot: An open-source, hardware-agnostic interface for liquid-handling robots and accessories. *Device*, 1(4), 100111. https://doi.org/10.1016/j.device.2023.100111
 
-Visit us at [https://cheshirelabs.io](https://cheshirelabs.io)
+```bibtex
+@article{wierenga2023pylabrobot,
+  title={PyLabRobot: An open-source, hardware-agnostic interface for liquid-handling robots and accessories},
+  author={Wierenga, Rick P. and Golas, Stefan M. and Ho, Wilson and Coley, Connor W. and Esvelt, Kevin M.},
+  journal={Device},
+  volume={1},
+  number={4},
+  pages={100111},
+  year={2023},
+  publisher={Elsevier},
+  doi={10.1016/j.device.2023.100111}
+}
+```
