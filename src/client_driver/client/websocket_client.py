@@ -7,7 +7,8 @@ import asyncio
 import logging
 import json
 import ssl
-from typing import Optional, Callable, Awaitable
+import time
+from typing import Optional, Callable, Awaitable, Dict
 from datetime import datetime
 import websockets
 from websockets.client import WebSocketClientProtocol
@@ -53,6 +54,7 @@ class WebSocketClient:
         self._running = False
         self._heartbeat_task: Optional[asyncio.Task] = None
         self._receive_task: Optional[asyncio.Task] = None
+        self._start_time: float = time.time()  # Track uptime for heartbeats
 
         # Status callback for UI/logging
         self.on_status_change: Optional[Callable[[str], Awaitable[None]]] = None
@@ -181,7 +183,10 @@ class WebSocketClient:
             while self._connected:
                 await asyncio.sleep(self.heartbeat_interval)
 
-                heartbeat = HeartbeatMessage(timestamp=datetime.utcnow())
+                heartbeat = HeartbeatMessage(
+                    timestamp=time.time(),  # Unix timestamp (float)
+                    uptime=time.time() - self._start_time  # Seconds since start
+                )
                 envelope = MessageEnvelope(type="heartbeat", payload=heartbeat.model_dump())
                 await self._send(envelope)
                 logger.debug("Sent heartbeat")
@@ -291,28 +296,33 @@ class WebSocketClient:
             except Exception as e:
                 logger.error(f"Error in status callback: {e}", exc_info=True)
 
-    async def send_status(self, device_id: str, status: str, details: Optional[dict] = None) -> None:
+    async def send_status(self, device_statuses: Dict[str, str]) -> None:
         """Send device status update to platform.
 
         Args:
-            device_id: Device identifier
-            status: Status string
-            details: Optional additional details
+            device_statuses: Map of device_id to status (e.g., {"shaker_1": "ready", "centrifuge_1": "busy"})
         """
         if not self.is_connected:
-            logger.warning(f"Cannot send status - not connected: {device_id} {status}")
+            logger.warning(f"Cannot send status - not connected")
             return
 
         try:
             status_msg = StatusMessage(
-                device_id=device_id,
-                status=status,
-                timestamp=datetime.utcnow(),
-                details=details or {}
+                devices=device_statuses,
+                timestamp=time.time()  # Unix timestamp (float)
             )
             envelope = MessageEnvelope(type="status", payload=status_msg.model_dump())
             await self._send(envelope)
-            logger.debug(f"Sent status: {device_id} {status}")
+            logger.debug(f"Sent status for {len(device_statuses)} devices")
 
         except Exception as e:
             logger.error(f"Error sending status: {e}", exc_info=True)
+
+    async def send_device_status(self, device_id: str, status: str) -> None:
+        """Send status update for a single device (convenience method).
+
+        Args:
+            device_id: Device identifier
+            status: Status string (e.g., "ready", "busy", "error")
+        """
+        await self.send_status({device_id: status})

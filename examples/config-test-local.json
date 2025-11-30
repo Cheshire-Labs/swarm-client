@@ -1,0 +1,24 @@
+{
+  "client_id": "test-workstation-local",
+  "site": "local",
+  "lab": "test",
+  "workcell": null,
+  "platform": {
+    "url": "ws://localhost:8000/ws/devices",
+    "api_key": "${SWARM_API_KEY}",
+    "verify_ssl": false,
+    "heartbeat_interval": 30.0,
+    "command_timeout": 60.0,
+    "reconnect_backoff": [1, 2, 4, 8, 16, 30]
+  },
+  "devices": [
+    {
+      "device_id": "preciseflex-sim",
+      "type": "transporter",
+      "name": "PreciseFlex Simulator",
+      "driver": {
+        "type": "sim"
+      }
+    }
+  ]
+}
