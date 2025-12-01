@@ -111,6 +111,12 @@ Configuration:
         help="Path to config.json file (default: ./config.json)"
     )
     parser.add_argument(
+        "--env", "-e",
+        type=Path,
+        default=None,
+        help="Path to .env file to load (default: use OS environment variables)"
+    )
+    parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose (DEBUG) logging"
@@ -122,6 +128,15 @@ Configuration:
     )
 
     args = parser.parse_args()
+
+    # Load .env file if specified (before any config loading)
+    if args.env:
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(args.env, override=True)
+            print(f"Loaded environment from: {args.env}")
+        except ImportError:
+            print("Warning: python-dotenv not installed, --env flag ignored")
 
     # Setup logging
     setup_logging(verbose=args.verbose)

@@ -2,19 +2,15 @@
 
 Loads configuration from a single config.json file.
 Environment variables can provide fallback values for platform settings.
+
+Note: .env file loading is handled by __main__.py via --env flag.
+If no --env flag specified, uses OS environment variables directly.
 """
 
 import os
 import json
 import re
 from pathlib import Path
-
-# Load .env file for local development
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass  # python-dotenv not installed, rely on system env vars
 
 from .models import ClientConfig, PlatformConfig
 
