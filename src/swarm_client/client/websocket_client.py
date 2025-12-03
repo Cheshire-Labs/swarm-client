@@ -10,7 +10,7 @@ import time
 from typing import Optional, Callable, Awaitable, Dict
 from urllib.parse import urlparse
 import websockets
-from websockets.client import WebSocketClientProtocol
+from websockets import ClientConnection
 
 from ..protocol import (
     MessageEnvelope, ConnectMessage, CommandMessage, ResponseMessage,
@@ -48,7 +48,7 @@ class WebSocketClient:
         self.reconnect_delay = reconnect_delay
         self.max_reconnect_delay = max_reconnect_delay
 
-        self.ws: Optional[WebSocketClientProtocol] = None
+        self.ws: Optional[ClientConnection] = None
         self._connected = False
         self._running = False
         self._heartbeat_task: Optional[asyncio.Task] = None
@@ -204,6 +204,8 @@ class WebSocketClient:
 
     async def _receive_loop(self) -> None:
         """Receive and process messages from platform."""
+        if self.ws is None:
+            return
         try:
             async for message in self.ws:
                 try:

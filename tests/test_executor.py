@@ -41,6 +41,7 @@ async def test_execute_device_not_found(device_registry: DeviceRegistry):
 
     assert response.success is False
     assert response.error_type == "DeviceNotFoundError"
+    assert response.error is not None
     assert "not found" in response.error.lower()
 
 
@@ -78,6 +79,7 @@ async def test_execute_private_method(device_registry: DeviceRegistry):
 
     assert response.success is False
     assert response.error_type == "SecurityError"
+    assert response.error is not None
     assert "private" in response.error.lower()
 
 

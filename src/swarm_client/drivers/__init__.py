@@ -25,7 +25,7 @@ from cheshire_drivers import (
     PLRSealerBackendWrapper,
     PLRCentrifugeBackendWrapper,
     PLRTransporterBackendWrapper,
-    convert_teachpoint_to_plr_coord,
+    convert_cartesian_to_plr_coord,
     # Simulation Drivers
     SimShakerDriver,
     SimSealerDriver,
@@ -74,7 +74,7 @@ __all__ = [
     "PLRSealerBackendWrapper",
     "PLRCentrifugeBackendWrapper",
     "PLRTransporterBackendWrapper",
-    "convert_teachpoint_to_plr_coord",
+    "convert_cartesian_to_plr_coord",
     # Simulation Drivers
     "SimShakerDriver",
     "SimSealerDriver",

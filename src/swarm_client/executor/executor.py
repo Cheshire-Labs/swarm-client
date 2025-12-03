@@ -84,7 +84,7 @@ class CommandExecutor:
         params = self._deserialize_params(cmd.command, cmd.params)
 
         # Execute with lock and timeout
-        async with driver.lock:
+        async with driver.lock:  # type: ignore[attr-defined]
             try:
                 result = await asyncio.wait_for(
                     method(**params),

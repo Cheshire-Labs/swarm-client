@@ -33,6 +33,7 @@ def test_response_message_success():
 
     assert response.success is True
     assert response.error is None
+    assert response.result is not None
     assert response.result["status"] == "ok"
 
 

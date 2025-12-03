@@ -8,6 +8,7 @@ from typing import Any
 from ..config.models import DeviceConfig
 from cheshire_drivers import (
     BaseDriver,
+    ITransporterDriver,
     SimShakerDriver, SimCentrifugeDriver, SimSealerDriver,
     SimTransporterDriver, SimLiquidHandlerDriver,
     SimPlateWasherDriver, SimReaderDriver, SimDelidderDriver,
@@ -24,7 +25,7 @@ logger = logging.getLogger("swarm_client.factory")
 class DeviceFactory:
     """Creates driver instances from configuration."""
 
-    def create_driver(self, config: DeviceConfig) -> BaseDriver:
+    def create_driver(self, config: DeviceConfig) -> BaseDriver | ITransporterDriver:
         """Create a driver based on configuration.
 
         Args:
@@ -45,7 +46,7 @@ class DeviceFactory:
         else:
             raise ValueError(f"Unknown driver type: {config.driver.type}")
 
-    def _create_sim_driver(self, config: DeviceConfig) -> BaseDriver:
+    def _create_sim_driver(self, config: DeviceConfig) -> BaseDriver | ITransporterDriver:
         """Create simulation driver."""
         if config.type == "shaker":
             return SimShakerDriver(config.device_id)
@@ -66,12 +67,13 @@ class DeviceFactory:
         else:
             raise ValueError(f"Unknown device type for sim driver: {config.type}")
 
-    def _create_plr_driver(self, config: DeviceConfig) -> BaseDriver:
+    def _create_plr_driver(self, config: DeviceConfig) -> BaseDriver | ITransporterDriver:
         """Create PyLabRobot driver."""
-        if not config.driver.backend:
+        backend_name = config.driver.backend
+        if not backend_name:
             raise ValueError(f"PLR backend not specified for device {config.device_id}")
 
-        backend = self._create_plr_backend(config)
+        backend = self._create_plr_backend(config, backend_name)
 
         if config.type == "shaker":
             return PLRShakerBackendWrapper(backend)
@@ -89,10 +91,9 @@ class DeviceFactory:
         else:
             raise ValueError(f"Unknown device type for PLR driver: {config.type}")
 
-    def _create_plr_backend(self, config: DeviceConfig) -> Any:
+    def _create_plr_backend(self, config: DeviceConfig, backend_name: str) -> Any:
         """Instantiate PyLabRobot backend from config."""
-        backend_class_name = config.driver.backend
-        backend_class = self._get_plr_backend_class(backend_class_name)
+        backend_class = self._get_plr_backend_class(backend_name)
 
         # Create backend based on connection type
         if config.driver.connection:
@@ -139,7 +140,7 @@ class DeviceFactory:
                 return getattr(__import__('pylabrobot.sealing', fromlist=[backend_name]), backend_name)
 
             # Try arm backends
-            from pylabrobot.arms.backend import ArmBackend
+            from pylabrobot.arms.backend import SCARABackend
             if hasattr(__import__('pylabrobot.arms', fromlist=[backend_name]), backend_name):
                 return getattr(__import__('pylabrobot.arms', fromlist=[backend_name]), backend_name)
 
