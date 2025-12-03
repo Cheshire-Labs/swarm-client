@@ -106,17 +106,17 @@ def _optional_platform_fields(platform_data: dict) -> dict:
 
     if "reconnect_backoff" in platform_data:
         fields["reconnect_backoff"] = platform_data["reconnect_backoff"]
-    elif os.getenv("SWARM_RECONNECT_BACKOFF"):
-        fields["reconnect_backoff"] = [float(x) for x in os.getenv("SWARM_RECONNECT_BACKOFF").split(",")]
+    elif (reconnect_backoff := os.getenv("SWARM_RECONNECT_BACKOFF")):
+        fields["reconnect_backoff"] = [float(x) for x in reconnect_backoff.split(",")]
 
     if "heartbeat_interval" in platform_data:
         fields["heartbeat_interval"] = platform_data["heartbeat_interval"]
-    elif os.getenv("SWARM_HEARTBEAT_INTERVAL"):
-        fields["heartbeat_interval"] = float(os.getenv("SWARM_HEARTBEAT_INTERVAL"))
+    elif (heartbeat_interval := os.getenv("SWARM_HEARTBEAT_INTERVAL")):
+        fields["heartbeat_interval"] = float(heartbeat_interval)
 
     if "command_timeout" in platform_data:
         fields["command_timeout"] = platform_data["command_timeout"]
-    elif os.getenv("SWARM_COMMAND_TIMEOUT"):
-        fields["command_timeout"] = float(os.getenv("SWARM_COMMAND_TIMEOUT"))
+    elif (command_timeout := os.getenv("SWARM_COMMAND_TIMEOUT")):
+        fields["command_timeout"] = float(command_timeout)
 
     return fields

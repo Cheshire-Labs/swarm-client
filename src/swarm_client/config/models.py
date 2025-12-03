@@ -55,7 +55,7 @@ class ClientConfig(BaseModel):
     client_id: str = Field(..., description="Unique client identifier")
     site: str = Field(..., description="Geographic site location")
     lab: str = Field(..., description="Lab or workcell name")
-    workcell: Optional[str] = Field(None, description="Optional workcell identifier")
+    workcell: Optional[str] = Field(default=None, description="Optional workcell identifier")
     platform: PlatformConfig
     devices: List[DeviceConfig]
 
