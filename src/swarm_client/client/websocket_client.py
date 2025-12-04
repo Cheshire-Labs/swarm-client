@@ -6,12 +6,11 @@
 import asyncio
 import logging
 import json
-import ssl
 import time
 from typing import Optional, Callable, Awaitable, Dict
-from datetime import datetime
+from urllib.parse import urlparse
 import websockets
-from websockets.client import WebSocketClientProtocol
+from websockets import ClientConnection
 
 from ..protocol import (
     MessageEnvelope, ConnectMessage, CommandMessage, ResponseMessage,
@@ -49,7 +48,7 @@ class WebSocketClient:
         self.reconnect_delay = reconnect_delay
         self.max_reconnect_delay = max_reconnect_delay
 
-        self.ws: Optional[WebSocketClientProtocol] = None
+        self.ws: Optional[ClientConnection] = None
         self._connected = False
         self._running = False
         self._heartbeat_task: Optional[asyncio.Task] = None
@@ -124,13 +123,18 @@ class WebSocketClient:
         """Connect to platform and run until disconnected."""
         # Build WebSocket URL with API key
         url = f"{self.config.platform.url}?api_key={self.config.platform.api_key}"
+        parsed = urlparse(self.config.platform.url)
 
-        # Create SSL context for TLS (WSS)
-        ssl_context = ssl.create_default_context()
-        if not self.config.platform.verify_ssl:
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            logger.warning("SSL verification disabled - use only for testing!")
+        # Security: ws:// only allowed for localhost
+        if parsed.scheme == "ws":
+            if parsed.hostname not in ("localhost", "127.0.0.1", "::1"):
+                raise ValueError(
+                    f"Insecure WebSocket (ws://) not allowed for remote hosts. "
+                    f"Use wss:// for {parsed.hostname}"
+                )
+            ssl_context = None
+        else:
+            ssl_context = True
 
         logger.info(f"Connecting to Swarm platform: {self.config.platform.url}")
 
@@ -200,6 +204,8 @@ class WebSocketClient:
 
     async def _receive_loop(self) -> None:
         """Receive and process messages from platform."""
+        if self.ws is None:
+            return
         try:
             async for message in self.ws:
                 try:

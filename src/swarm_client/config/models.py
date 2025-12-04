@@ -34,9 +34,8 @@ class DeviceConfig(BaseModel):
 
 class PlatformConfig(BaseModel):
     """Swarm platform connection configuration."""
-    url: str = Field(..., description="WebSocket URL (wss://...)")
+    url: str = Field(..., description="WebSocket URL (wss://... or ws://localhost)")
     api_key: str = Field(..., description="API key for authentication")
-    verify_ssl: bool = Field(default=True, description="Verify SSL certificates")
     reconnect_backoff: List[float] = Field(
         default=[1, 2, 4, 8, 16, 30],
         description="Reconnection backoff in seconds"
@@ -56,7 +55,7 @@ class ClientConfig(BaseModel):
     client_id: str = Field(..., description="Unique client identifier")
     site: str = Field(..., description="Geographic site location")
     lab: str = Field(..., description="Lab or workcell name")
-    workcell: Optional[str] = Field(None, description="Optional workcell identifier")
+    workcell: Optional[str] = Field(default=None, description="Optional workcell identifier")
     platform: PlatformConfig
     devices: List[DeviceConfig]
 

@@ -1,4 +1,4 @@
-"""Configuration package for client-driver."""
+"""Configuration package for swarm-client."""
 
 from .models import (
     ConnectionConfig,
@@ -7,8 +7,11 @@ from .models import (
     PlatformConfig,
     ClientConfig,
 )
-from .loader import get_config_directory, load_client_config
+from .loader import load_client_config
 from .logging_setup import get_log_directory, setup_logging
+
+# Alias for simpler import
+load_config = load_client_config
 
 __all__ = [
     "ConnectionConfig",
@@ -16,8 +19,8 @@ __all__ = [
     "DeviceConfig",
     "PlatformConfig",
     "ClientConfig",
-    "get_config_directory",
     "load_client_config",
+    "load_config",
     "get_log_directory",
     "setup_logging",
 ]

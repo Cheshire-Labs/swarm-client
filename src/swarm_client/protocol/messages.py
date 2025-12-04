@@ -26,7 +26,7 @@ class ConnectMessage(BaseModel):
     api_key: str = Field(..., description="API key for authentication")
     site: str = Field(..., description="Geographic site location (e.g., 'boston', 'cambridge')")
     lab: str = Field(..., description="Lab or workcell name within site (e.g., 'molbio', 'cellculture')")
-    workcell: Optional[str] = Field(None, description="Optional workcell identifier for standalone device setups")
+    workcell: Optional[str] = Field(default=None, description="Optional workcell identifier for standalone device setups")
     devices: List[Dict[str, str]] = Field(
         ...,
         description="List of available devices with device_id, type, and name"
@@ -83,9 +83,9 @@ class ResponseMessage(BaseModel):
     """
     command_id: str = Field(..., description="ID of the command this responds to")
     success: bool = Field(..., description="Whether the command succeeded")
-    result: Optional[Any] = Field(None, description="Result data if successful")
-    error: Optional[str] = Field(None, description="Human-readable error message")
-    error_type: Optional[str] = Field(None, description="Error type for programmatic handling")
+    result: Optional[Any] = Field(default=None, description="Result data if successful")
+    error: Optional[str] = Field(default=None, description="Human-readable error message")
+    error_type: Optional[str] = Field(default=None, description="Error type for programmatic handling")
 
     class Config:
         json_schema_extra = {

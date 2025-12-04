@@ -1,97 +1,122 @@
 """Configuration loader for swarm-client.
 
-Loads configuration from .env file (secrets) and config.json (devices).
+Loads configuration from a single config.json file.
+Environment variables can provide fallback values for platform settings.
+
+Note: .env file loading is handled by __main__.py via --env flag.
+If no --env flag specified, uses OS environment variables directly.
 """
 
 import os
-import sys
 import json
+import re
 from pathlib import Path
-from typing import Optional
-from dotenv import load_dotenv
 
 from .models import ClientConfig, PlatformConfig
 
 
-def get_config_directory() -> Path:
-    """Get platform-specific configuration directory.
-
-    Returns:
-        Windows: %USERPROFILE%\\.swarm-client
-        macOS: ~/.swarm-client
-        Linux: ~/.swarm-client
-    """
-    if sys.platform == "win32":
-        base = Path(os.environ.get("USERPROFILE", "C:\\Users\\Default"))
-    else:
-        base = Path.home()
-
-    config_dir = base / ".swarm-client"
-    config_dir.mkdir(parents=True, exist_ok=True)
-    return config_dir
+def _expand_env_vars(value: str) -> str:
+    """Expand ${VAR} syntax from environment variables."""
+    if not isinstance(value, str):
+        return value
+    pattern = r'\$\{([^}]+)\}'
+    def replacer(match):
+        var_name = match.group(1)
+        return os.getenv(var_name, match.group(0))
+    return re.sub(pattern, replacer, value)
 
 
-def load_client_config(config_path: Optional[str] = None) -> ClientConfig:
-    """Load client configuration from .env and config.json.
+def load_client_config(config_path: str) -> ClientConfig:
+    """Load client configuration from config.json.
+
+    Configuration priority (highest to lowest):
+    1. Config file values (config.json)
+    2. Environment variables (SWARM_URL, SWARM_API_KEY, etc.)
+    3. Model defaults
 
     Args:
-        config_path: Optional path to config.json. If None, uses default location.
+        config_path: Path to config.json file.
 
     Returns:
         Validated ClientConfig instance
 
     Raises:
         FileNotFoundError: If config file doesn't exist
-        ValueError: If configuration is invalid
+        ValueError: If required fields (url, api_key) are missing
     """
-    config_dir = get_config_directory()
-
-    # Load .env file for secrets
-    env_file = config_dir / ".env"
-    if env_file.exists():
-        load_dotenv(env_file)
-
-    # Load config.json for device definitions
-    if config_path is None:
-        config_path = str(config_dir / "config.json")
-
     if not Path(config_path).exists():
         raise FileNotFoundError(
             f"Configuration file not found: {config_path}\n"
-            f"Create a config.json file at {config_dir / 'config.json'}"
+            f"Create a config.json file in your working directory.\n"
+            f"See examples/config.example.json for the expected format."
         )
 
     with open(config_path, 'r') as f:
         config_data = json.load(f)
 
-    # Build platform config from environment variables
+    # Get platform config from file (or empty dict if not present)
+    platform_data = config_data.get("platform", {})
+
+    # Build platform config: file values override env vars, model provides defaults
+    # Priority: config file (with ${VAR} expansion) > env var > model default
+    url = _expand_env_vars(platform_data.get("url", "")) or os.getenv("SWARM_URL", "")
+    api_key = _expand_env_vars(platform_data.get("api_key", "")) or os.getenv("SWARM_API_KEY", "")
+
     platform = PlatformConfig(
-        url=os.getenv("SWARM_URL", ""),
-        api_key=os.getenv("SWARM_API_KEY", ""),
-        reconnect_backoff=[
-            float(x) for x in os.getenv("SWARM_RECONNECT_BACKOFF", "1,2,4,8,16,30").split(",")
-        ],
-        heartbeat_interval=float(os.getenv("SWARM_HEARTBEAT_INTERVAL", "30")),
-        command_timeout=float(os.getenv("SWARM_COMMAND_TIMEOUT", "60"))
+        url=url,
+        api_key=api_key,
+        # Optional fields - only pass if explicitly set, otherwise use model defaults
+        **_optional_platform_fields(platform_data)
     )
 
-    # Validate required environment variables
+    # Validate required fields
     if not platform.url:
         raise ValueError(
-            "SWARM_URL not found in environment.\n"
-            f"Create a .env file at {env_file} with:\n"
-            "SWARM_URL=wss://your-swarm-url\n"
-            "SWARM_API_KEY=your-api-key"
+            "url is required.\n"
+            "Add 'url' to the 'platform' section in config.json:\n"
+            '  "platform": { "url": "wss://your-swarm-url", "api_key": "..." }\n'
+            "Or set SWARM_URL environment variable."
         )
 
     if not platform.api_key:
         raise ValueError(
-            "SWARM_API_KEY not found in environment.\n"
-            f"Add SWARM_API_KEY to {env_file}"
+            "api_key is required.\n"
+            "Add 'api_key' to the 'platform' section in config.json:\n"
+            '  "platform": { "url": "...", "api_key": "your-api-key" }\n'
+            "Or set SWARM_API_KEY environment variable."
         )
 
-    # Combine platform config with device config
+    # Build full config - let Pydantic validate the rest
     return ClientConfig(
+        client_id=config_data.get("client_id", ""),
+        site=config_data.get("site", ""),
+        lab=config_data.get("lab", ""),
+        workcell=config_data.get("workcell"),
         platform=platform,
         devices=config_data.get("devices", [])
     )
+
+
+def _optional_platform_fields(platform_data: dict) -> dict:
+    """Extract optional platform fields, only including those explicitly set.
+
+    This allows the PlatformConfig model defaults to be used when fields aren't specified.
+    """
+    fields = {}
+
+    if "reconnect_backoff" in platform_data:
+        fields["reconnect_backoff"] = platform_data["reconnect_backoff"]
+    elif (reconnect_backoff := os.getenv("SWARM_RECONNECT_BACKOFF")):
+        fields["reconnect_backoff"] = [float(x) for x in reconnect_backoff.split(",")]
+
+    if "heartbeat_interval" in platform_data:
+        fields["heartbeat_interval"] = platform_data["heartbeat_interval"]
+    elif (heartbeat_interval := os.getenv("SWARM_HEARTBEAT_INTERVAL")):
+        fields["heartbeat_interval"] = float(heartbeat_interval)
+
+    if "command_timeout" in platform_data:
+        fields["command_timeout"] = platform_data["command_timeout"]
+    elif (command_timeout := os.getenv("SWARM_COMMAND_TIMEOUT")):
+        fields["command_timeout"] = float(command_timeout)
+
+    return fields

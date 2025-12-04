@@ -2,7 +2,7 @@
 
 import pytest
 import asyncio
-from typing import Dict, Any
+from typing import Dict, Any, AsyncGenerator
 
 from swarm_client.devices import DeviceRegistry, DeviceFactory
 from swarm_client.config.models import (
@@ -47,7 +47,6 @@ def platform_config() -> PlatformConfig:
     return PlatformConfig(
         url="wss://test.example.com/ws",
         api_key="test_api_key",
-        verify_ssl=False,
         heartbeat_interval=10.0,
         command_timeout=30.0
     )
@@ -62,6 +61,8 @@ def client_config(
     """Create a test client config with simulation devices."""
     return ClientConfig(
         client_id="test_client",
+        site="test_site",
+        lab="test_lab",
         platform=platform_config,
         devices=[sim_shaker_config, sim_centrifuge_config]
     )
@@ -78,7 +79,7 @@ async def device_registry(
     device_factory: DeviceFactory,
     sim_shaker_config: DeviceConfig,
     sim_centrifuge_config: DeviceConfig
-) -> DeviceRegistry:
+) -> AsyncGenerator[DeviceRegistry, None]:
     """Create a device registry with test devices."""
     registry = DeviceRegistry()
 
