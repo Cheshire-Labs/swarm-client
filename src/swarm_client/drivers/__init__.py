@@ -45,8 +45,10 @@ from cheshire_drivers import (
     # Teachpoints
     Teachpoint,
     CartesianCoordinates,
+    JointCoordinates,
     TeachpointsRegistry,
     AccessConfig,
+    convert_joint_to_plr_list,
     # Specialized Drivers
     VenusProtocolDriver,
     SimulationVenusProtocolDriver,
@@ -94,8 +96,10 @@ __all__ = [
     # Teachpoints
     "Teachpoint",
     "CartesianCoordinates",
+    "JointCoordinates",
     "TeachpointsRegistry",
     "AccessConfig",
+    "convert_joint_to_plr_list",
     # Specialized Drivers
     "VenusProtocolDriver",
     "SimulationVenusProtocolDriver",
