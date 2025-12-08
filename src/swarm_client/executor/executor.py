@@ -91,6 +91,10 @@ class CommandExecutor:
                     timeout=self.timeout
                 )
 
+                # Serialize result if it has a to_dict method (e.g., JointCoordinates)
+                if hasattr(result, 'to_dict'):
+                    result = result.to_dict()
+
                 logger.debug(f"Command {cmd.command_id} completed successfully")
                 return ResponseMessage(
                     command_id=cmd.command_id,
