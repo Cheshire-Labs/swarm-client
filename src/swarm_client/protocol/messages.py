@@ -1,7 +1,7 @@
 """WebSocket protocol message definitions.
 
 This module defines the message format for communication between the
-client-driver and the Swarm platform.
+swarm-client and the Swarm platform.
 
 IMPORTANT: This file must be kept in sync with the same file in swarm-backend.
 Any changes to message structures must be coordinated between both repositories.
@@ -9,7 +9,6 @@ Any changes to message structures must be coordinated between both repositories.
 
 from pydantic import BaseModel, Field
 from typing import Literal, Dict, Any, Optional, List
-from datetime import datetime
 
 
 # Protocol version for compatibility checking
