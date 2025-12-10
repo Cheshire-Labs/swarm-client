@@ -29,7 +29,7 @@ class WebSocketClient:
         self,
         config: ClientConfig,
         executor: CommandExecutor,
-        heartbeat_interval: float = 30.0,
+        heartbeat_interval: float = 20.0,
         reconnect_delay: float = 5.0,
         max_reconnect_delay: float = 60.0
     ):
@@ -185,8 +185,7 @@ class WebSocketClient:
         """Send periodic heartbeats to keep connection alive."""
         try:
             while self._connected:
-                await asyncio.sleep(self.heartbeat_interval)
-
+                # Send heartbeat first, then sleep (ensures immediate heartbeat on connection)
                 heartbeat = HeartbeatMessage(
                     timestamp=time.time(),  # Unix timestamp (float)
                     uptime=time.time() - self._start_time  # Seconds since start
@@ -194,6 +193,8 @@ class WebSocketClient:
                 envelope = MessageEnvelope(type="heartbeat", payload=heartbeat.model_dump())
                 await self._send(envelope)
                 logger.debug("Sent heartbeat")
+
+                await asyncio.sleep(self.heartbeat_interval)
 
         except asyncio.CancelledError:
             logger.debug("Heartbeat loop cancelled")
