@@ -5,10 +5,17 @@
 
 import asyncio
 import logging
+from typing import Any, Dict
+
+from cheshire_drivers.teachpoints import Teachpoint
+
 from ..protocol import CommandMessage, ResponseMessage
 from ..devices import DeviceRegistry
 
 logger = logging.getLogger("swarm_client.executor")
+
+# Commands that require teachpoint deserialization
+TEACHPOINT_COMMANDS = {"pick_at_coords", "place_at_coords", "move_to_coords"}
 
 
 class CommandExecutor:
@@ -73,13 +80,20 @@ class CommandExecutor:
                 "NotAsyncError"
             )
 
+        # Deserialize teachpoint for coordinate commands
+        params = self._deserialize_params(cmd.command, cmd.params)
+
         # Execute with lock and timeout
-        async with driver.lock:
+        async with driver.lock:  # type: ignore[attr-defined]
             try:
                 result = await asyncio.wait_for(
-                    method(**cmd.params),
+                    method(**params),
                     timeout=self.timeout
                 )
+
+                # Serialize result if it has a to_dict method (e.g., JointCoordinates)
+                if hasattr(result, 'to_dict'):
+                    result = result.to_dict()
 
                 logger.debug(f"Command {cmd.command_id} completed successfully")
                 return ResponseMessage(
@@ -124,3 +138,22 @@ class CommandExecutor:
             error=error,
             error_type=error_type
         )
+
+    def _deserialize_params(
+        self,
+        command: str,
+        params: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Deserialize complex objects in params before passing to driver.
+
+        For teachpoint commands, converts the teachpoint dict to a Teachpoint object.
+        """
+        if command not in TEACHPOINT_COMMANDS:
+            return params
+
+        if "teachpoint" not in params:
+            return params
+
+        tp_dict = params["teachpoint"]
+        teachpoint = Teachpoint.from_dict(tp_dict)
+        return {**params, "teachpoint": teachpoint}

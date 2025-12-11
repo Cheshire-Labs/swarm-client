@@ -10,7 +10,7 @@ import time
 from typing import Optional, Callable, Awaitable, Dict
 from urllib.parse import urlparse
 import websockets
-from websockets.client import WebSocketClientProtocol
+from websockets import ClientConnection
 
 from ..protocol import (
     MessageEnvelope, ConnectMessage, CommandMessage, ResponseMessage,
@@ -29,7 +29,7 @@ class WebSocketClient:
         self,
         config: ClientConfig,
         executor: CommandExecutor,
-        heartbeat_interval: float = 30.0,
+        heartbeat_interval: float = 20.0,
         reconnect_delay: float = 5.0,
         max_reconnect_delay: float = 60.0
     ):
@@ -48,7 +48,7 @@ class WebSocketClient:
         self.reconnect_delay = reconnect_delay
         self.max_reconnect_delay = max_reconnect_delay
 
-        self.ws: Optional[WebSocketClientProtocol] = None
+        self.ws: Optional[ClientConnection] = None
         self._connected = False
         self._running = False
         self._heartbeat_task: Optional[asyncio.Task] = None
@@ -185,8 +185,7 @@ class WebSocketClient:
         """Send periodic heartbeats to keep connection alive."""
         try:
             while self._connected:
-                await asyncio.sleep(self.heartbeat_interval)
-
+                # Send heartbeat first, then sleep (ensures immediate heartbeat on connection)
                 heartbeat = HeartbeatMessage(
                     timestamp=time.time(),  # Unix timestamp (float)
                     uptime=time.time() - self._start_time  # Seconds since start
@@ -194,6 +193,8 @@ class WebSocketClient:
                 envelope = MessageEnvelope(type="heartbeat", payload=heartbeat.model_dump())
                 await self._send(envelope)
                 logger.debug("Sent heartbeat")
+
+                await asyncio.sleep(self.heartbeat_interval)
 
         except asyncio.CancelledError:
             logger.debug("Heartbeat loop cancelled")
@@ -204,6 +205,8 @@ class WebSocketClient:
 
     async def _receive_loop(self) -> None:
         """Receive and process messages from platform."""
+        if self.ws is None:
+            return
         try:
             async for message in self.ws:
                 try:

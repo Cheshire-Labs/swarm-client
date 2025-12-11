@@ -19,3 +19,5 @@ dist
 htmlcov/
 *.log
 .DS_Store
+.claude/
+claude.md

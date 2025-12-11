@@ -25,7 +25,7 @@ from cheshire_drivers import (
     PLRSealerBackendWrapper,
     PLRCentrifugeBackendWrapper,
     PLRTransporterBackendWrapper,
-    convert_teachpoint_to_plr_coord,
+    convert_cartesian_to_plr_coord,
     # Simulation Drivers
     SimShakerDriver,
     SimSealerDriver,
@@ -45,8 +45,10 @@ from cheshire_drivers import (
     # Teachpoints
     Teachpoint,
     CartesianCoordinates,
+    JointCoordinates,
     TeachpointsRegistry,
     AccessConfig,
+    convert_joint_to_plr_list,
     # Specialized Drivers
     VenusProtocolDriver,
     SimulationVenusProtocolDriver,
@@ -74,7 +76,7 @@ __all__ = [
     "PLRSealerBackendWrapper",
     "PLRCentrifugeBackendWrapper",
     "PLRTransporterBackendWrapper",
-    "convert_teachpoint_to_plr_coord",
+    "convert_cartesian_to_plr_coord",
     # Simulation Drivers
     "SimShakerDriver",
     "SimSealerDriver",
@@ -94,8 +96,10 @@ __all__ = [
     # Teachpoints
     "Teachpoint",
     "CartesianCoordinates",
+    "JointCoordinates",
     "TeachpointsRegistry",
     "AccessConfig",
+    "convert_joint_to_plr_list",
     # Specialized Drivers
     "VenusProtocolDriver",
     "SimulationVenusProtocolDriver",
