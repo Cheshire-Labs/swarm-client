@@ -35,7 +35,7 @@ async def async_main(args: argparse.Namespace) -> int:
         registry = DeviceRegistry()
         factory = DeviceFactory()
 
-        # Create and register all devices
+        # Create and register all devices (but don't initialize yet - cloud will call initialize)
         logger.info("Creating device drivers...")
         for device_config in config.devices:
             driver = factory.create_driver(device_config)
@@ -47,10 +47,9 @@ async def async_main(args: argparse.Namespace) -> int:
             )
             logger.info(f"  • {device_config.device_id} ({device_config.type}): {device_config.name}")
 
-        # Initialize all devices (CRITICAL: fail fast if hardware unavailable)
-        logger.info("Initializing devices...")
-        await registry.initialize_all()
-        logger.info("All devices initialized successfully")
+        # NOTE: Devices are NOT initialized here. Cloud will call initialize() when ready.
+        # This allows the cloud to orchestrate initialization timing and receive status updates.
+        logger.info("Devices registered (not yet initialized - cloud will call initialize)")
 
         # Create command executor
         executor = CommandExecutor(
