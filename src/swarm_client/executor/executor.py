@@ -17,6 +17,9 @@ logger = logging.getLogger("swarm_client.executor")
 # Commands that require teachpoint deserialization
 TEACHPOINT_COMMANDS = {"pick_at_coords", "place_at_coords", "move_to_coords"}
 
+# Properties (sync, not async methods) - accessed directly without calling
+PROPERTY_QUERIES = {"is_initialized"}
+
 
 class CommandExecutor:
     """Executes string-based commands on devices with validation and locking."""
@@ -61,7 +64,7 @@ class CommandExecutor:
                 "DeviceNotFoundError"
             )
 
-        # Verify driver supports command
+        # Verify driver supports command/property
         if not hasattr(driver, cmd.command):
             logger.error(f"Device {cmd.device_id} does not support {cmd.command}")
             return self._error_response(
@@ -70,7 +73,25 @@ class CommandExecutor:
                 "UnsupportedCommandError"
             )
 
-        # Verify method is async
+        # Handle property queries (sync attributes like is_initialized)
+        if cmd.command in PROPERTY_QUERIES:
+            try:
+                result = getattr(driver, cmd.command)
+                logger.debug(f"Property {cmd.command} = {result}")
+                return ResponseMessage(
+                    command_id=cmd.command_id,
+                    success=True,
+                    result=result
+                )
+            except Exception as e:
+                logger.error(f"Property access {cmd.command} failed: {e}", exc_info=True)
+                return self._error_response(
+                    cmd.command_id,
+                    str(e),
+                    type(e).__name__
+                )
+
+        # Verify method is async (for non-property commands)
         method = getattr(driver, cmd.command)
         if not asyncio.iscoroutinefunction(method):
             logger.error(f"Command {cmd.command} is not async on {cmd.device_id}")
