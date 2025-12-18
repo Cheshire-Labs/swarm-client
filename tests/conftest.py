@@ -45,7 +45,7 @@ def sim_centrifuge_config() -> DeviceConfig:
 def platform_config() -> PlatformConfig:
     """Create a test platform config."""
     return PlatformConfig(
-        url="wss://test.example.com/ws",
+        url="wss://test.example.com/ws/devices",
         api_key="test_api_key",
         heartbeat_interval=10.0,
         command_timeout=30.0

@@ -1,4 +1,4 @@
-"""Configuration models for client-driver.
+"""Configuration models for swarm-client.
 
 Uses Pydantic for validation of JSON configuration files.
 """

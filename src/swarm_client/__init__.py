@@ -1,5 +1,5 @@
 """
-Cheshire Client Driver
+Swarm Client
 
 WebSocket client for connecting local device drivers to Swarm platform.
 """
