@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarm-client"
-version = "0.1.0"
+dynamic = ["version"]
 description = "WebSocket client for connecting local device drivers to Swarm platform"
 authors = [
     { name = "Cheshire Labs", email = "support@cheshirelabs.io" }
@@ -38,3 +38,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = {attr = "swarm_client.__version__"}
