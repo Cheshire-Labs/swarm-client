@@ -6,6 +6,7 @@ import sys
 import logging
 from pathlib import Path
 
+from . import __version__
 from .config import load_config, setup_logging
 from .devices import DeviceFactory, DeviceRegistry
 from .executor import CommandExecutor
@@ -123,7 +124,7 @@ Configuration:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.0"
+        version=f"%(prog)s {__version__}"
     )
 
     args = parser.parse_args()
@@ -142,7 +143,7 @@ Configuration:
 
     # Log startup banner
     logger.info("=" * 60)
-    logger.info("Swarm Client v0.1.0")
+    logger.info(f"Swarm Client v{__version__}")
     logger.info("Connecting lab devices to Swarm platform")
     logger.info("=" * 60)
 

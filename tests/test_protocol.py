@@ -74,7 +74,6 @@ def test_connect_message():
     """Test connection message."""
     connect = ConnectMessage(
         protocol_version="1.0.0",
-        api_key="test_api_key",
         site="boston",
         lab="molbio",
         devices=[
@@ -83,7 +82,6 @@ def test_connect_message():
         ]
     )
 
-    assert connect.api_key == "test_api_key"
     assert connect.site == "boston"
     assert connect.lab == "molbio"
     assert len(connect.devices) == 2

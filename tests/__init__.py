@@ -1,1 +1,1 @@
-"""Tests package for client-driver."""
+"""Tests package for swarm-client."""
