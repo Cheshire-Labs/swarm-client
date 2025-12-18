@@ -18,11 +18,11 @@ PROTOCOL_VERSION = "1.0.0"
 class ConnectMessage(BaseModel):
     """Sent by client when connecting to platform.
 
-    The client authenticates using an API key and provides a list of
-    devices it can control, along with organizational hierarchy metadata.
+    The client provides a list of devices it can control, along with
+    organizational hierarchy metadata. Authentication is handled via
+    the X-API-Key HTTP header during WebSocket handshake.
     """
     protocol_version: str = PROTOCOL_VERSION
-    api_key: str = Field(..., description="API key for authentication")
     site: str = Field(..., description="Geographic site location (e.g., 'boston', 'cambridge')")
     lab: str = Field(..., description="Lab or workcell name within site (e.g., 'molbio', 'cellculture')")
     workcell: Optional[str] = Field(default=None, description="Optional workcell identifier for standalone device setups")
@@ -35,7 +35,6 @@ class ConnectMessage(BaseModel):
         json_schema_extra = {
             "example": {
                 "protocol_version": "1.0.0",
-                "api_key": "sk_test_1234567890",
                 "site": "boston",
                 "lab": "molbio",
                 "workcell": None,

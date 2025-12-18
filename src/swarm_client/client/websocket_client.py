@@ -121,8 +121,6 @@ class WebSocketClient:
 
     async def _connect_and_run(self) -> None:
         """Connect to platform and run until disconnected."""
-        # Build WebSocket URL with API key
-        url = f"{self.config.platform.url}?api_key={self.config.platform.api_key}"
         parsed = urlparse(self.config.platform.url)
 
         # Security: ws:// only allowed for localhost
@@ -138,7 +136,12 @@ class WebSocketClient:
 
         logger.info(f"Connecting to Swarm platform: {self.config.platform.url}")
 
-        async with websockets.connect(url, ssl=ssl_context) as ws:
+        # Send API key via header (not query param) for security
+        async with websockets.connect(
+            self.config.platform.url,
+            ssl=ssl_context,
+            additional_headers={"X-API-Key": self.config.platform.api_key}
+        ) as ws:
             self.ws = ws
             logger.info("Connected to Swarm platform")
 
@@ -171,7 +174,6 @@ class WebSocketClient:
         """Send initial connection message to platform."""
         msg = ConnectMessage(
             protocol_version=PROTOCOL_VERSION,
-            api_key=self.config.platform.api_key,
             site=self.config.site,
             lab=self.config.lab,
             workcell=self.config.workcell,
