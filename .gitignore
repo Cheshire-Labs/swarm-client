@@ -19,5 +19,6 @@ htmlcov/
 *.log
 .DS_Store
 .claude/
+.serena/
 claude.md
 demo/

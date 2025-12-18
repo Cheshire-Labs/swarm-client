@@ -152,4 +152,4 @@ class DeviceFactory:
 
     def _create_venus_driver(self, config: DeviceConfig) -> BaseDriver:
         """Create Venus driver (future implementation)."""
-        raise NotImplementedError("Venus driver not yet implemented in client-driver")
+        raise NotImplementedError("Venus driver not yet implemented in swarm-client")
